@@ -62,6 +62,83 @@
 
     source = source.replace(recursiveUrl, baseJournalUrl);
 
+    // Add Oct 28 learning directly into the merged journal's Common Phrases bank.
+    const patchAnchor =
+      "    // Make relative behavior/scripts work by adding a base URL for GitHub source.";
+
+    const oct28Patch = String.raw`
+    // Oct 28 — useful structures from "Le bac, à quoi ça sert ?"
+    const oct28LastUpdated = doc.getElementById("last-updated");
+    if (oct28LastUpdated) {
+      oct28LastUpdated.textContent = "Last updated: October 28, 2026";
+    }
+
+    const oct28PhraseTbody = doc.querySelector("#phrases-panel .bank-table tbody");
+    if (oct28PhraseTbody) {
+      const oct28Rows = [
+        { fr: "faire l’objet de", en: "to be the subject of", group: "conversation", example: "Le bac fait l’objet de nombreuses questions. = The bac is the subject of many questions. Fixed expression: do not translate it word-for-word." },
+        { fr: "a-t-il… ?", en: "does he/it have…?", group: "questions", example: "Le bac a-t-il une valeur ? = Does the bac have value? Formal inversion; -t- is inserted for pronunciation." },
+        { fr: "même si ça reste…", en: "even though / even if it remains…", group: "conversation", example: "même si = even if/even though; ça = it/that; reste = remains/stays." },
+        { fr: "j’ai arrêté… / je me suis arrêté(e)", en: "I stopped/quit… / I stopped, came to a stop", group: "conversation", example: "arrêter quelque chose = stop something; s’arrêter = come to a stop. J’ai arrêté l’école. = I quit/stopped school." },
+        { fr: "lycéen / lycéenne en terminale", en: "high-school student in the final year", group: "classroom", example: "The lycée years are: seconde → première → terminale." },
+        { fr: "car / parce que", en: "because", group: "conversation", example: "Both mean because. Parce que is more common in everyday speech; car is more written/formal." },
+        { fr: "formation (sur un CV)", en: "education / training", group: "classroom", example: "Sur un CV, la partie formation = the education/training section." },
+        { fr: "t’es pas…", en: "you’re not… (casual)", group: "conversation", example: "Spoken tu n’es pas often becomes t’es pas. In casual speech, ne is commonly dropped." },
+        { fr: "franchement", en: "honestly / frankly", group: "conversation", example: "Franchement, ça sert à rien. = Honestly, it’s useless." },
+        { fr: "ça sert à… / ça sert à rien", en: "it is useful for… / it’s useless", group: "conversation", example: "servir à = to be useful for / serve a purpose. Ça sert à quoi ? = What is it for?" },
+        { fr: "ça, c’est…", en: "that / this is…", group: "conversation", example: "Ça, c’est important. = That is important." },
+        { fr: "la frime / pour la frime", en: "showing off / just to show off", group: "conversation", example: "Juste pour la frime. = Just to show off." },
+        { fr: "ce qu’on ne sait pas…", en: "what people / we don’t know…", group: "conversation", example: "ce que = what/the thing that; on = people/we; ne sait pas = doesn’t/don’t know." },
+        { fr: "je me suis renseigné(e)", en: "I looked into it / found out more", group: "conversation", example: "se renseigner = to get information / look into something. Add -e for a feminine speaker: renseignée." },
+        { fr: "ce qui compte le plus…", en: "what matters most…", group: "conversation", example: "compter can mean to count, but here it means to matter." },
+        { fr: "se payer les études", en: "to pay for / afford one’s studies", group: "conversation", example: "payer = to pay; un pays = a country. They are different words." },
+        { fr: "par contre", en: "on the other hand / however", group: "conversation", example: "Par contre, pour un travail qui nécessite des études supérieures, non." },
+        { fr: "il y a", en: "there is / there are", group: "conversation", example: "Il y a un problème. = There is a problem. Learn il y a as one fixed chunk rather than translating it word-for-word." },
+        { fr: "il y avait", en: "there was / there were", group: "conversation", example: "Il y avait beaucoup de phrases différentes. = There were a lot of different phrases." },
+        { fr: "il y aura", en: "there will be", group: "future", example: "Il y aura un examen demain. = There will be a test tomorrow." },
+        { fr: "il y avait ≠ il était", en: "there was/were ≠ he/it was", group: "conversation", example: "Il y avait un problème. = There was a problem. Il était difficile. = It was difficult." },
+        { fr: "il y a + durée", en: "… ago", group: "conversation", example: "J’ai commencé à apprendre le français il y a un an. = I started learning French one year ago. This is another use of il y a." }
+      ];
+
+      for (const item of oct28Rows) {
+        const exists = [...oct28PhraseTbody.querySelectorAll("td:first-child")]
+          .some(td => td.textContent.trim() === item.fr);
+        if (exists) continue;
+
+        const tr = doc.createElement("tr");
+        tr.className = "phrase-row";
+        tr.dataset.group = item.group;
+        tr.dataset.search = (item.fr + " " + item.en + " " + item.group + " " + item.example).toLowerCase();
+
+        const frTd = doc.createElement("td");
+        const frSpan = doc.createElement("span");
+        frSpan.className = "fr";
+        frSpan.textContent = item.fr;
+        frTd.appendChild(frSpan);
+
+        const enTd = doc.createElement("td");
+        enTd.textContent = item.en;
+
+        const groupTd = doc.createElement("td");
+        const groupSpan = doc.createElement("span");
+        groupSpan.className = "verb-tag";
+        groupSpan.textContent = item.group.charAt(0).toUpperCase() + item.group.slice(1);
+        groupTd.appendChild(groupSpan);
+
+        const exampleTd = doc.createElement("td");
+        exampleTd.textContent = item.example;
+
+        tr.append(frTd, enTd, groupTd, exampleTd);
+        oct28PhraseTbody.appendChild(tr);
+      }
+    }
+`;
+
+    if (!source.includes(patchAnchor)) {
+      throw new Error("Could not find the merge point for the Oct 28 phrase update.");
+    }
+    source = source.replace(patchAnchor, oct28Patch + "\n\n" + patchAnchor);
+
     document.open();
     document.write(source);
     document.close();
